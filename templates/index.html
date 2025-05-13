@@ -35,7 +35,33 @@
 
             <div id="result" class="hidden bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-2xl font-semibold mb-4 text-gray-800">Race Report Summary</h2>
-                <div id="summary" class="prose max-w-none text-gray-700 space-y-4"></div>
+                <div id="summary" class="space-y-6">
+                    <div class="section">
+                        <h3 class="text-xl font-semibold mb-2 text-gray-700">Race Organization & Logistics</h3>
+                        <div id="organization" class="prose max-w-none text-gray-600"></div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 class="text-xl font-semibold mb-2 text-gray-700">Course Details</h3>
+                        <div id="course" class="prose max-w-none text-gray-600"></div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 class="text-xl font-semibold mb-2 text-gray-700">Parking & Number Collection</h3>
+                        <div id="logistics" class="prose max-w-none text-gray-600"></div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 class="text-xl font-semibold mb-2 text-gray-700">Common Themes & Issues</h3>
+                        <div id="themes" class="prose max-w-none text-gray-600"></div>
+                    </div>
+                    
+                    <div class="mt-8 pt-4 border-t border-gray-200">
+                        <h3 class="text-lg font-semibold mb-2 text-gray-700">Sources</h3>
+                        <ul id="sources" class="list-disc pl-5 space-y-1"></ul>
+                        <p class="mt-4 text-sm text-gray-500">Based on analysis of <span id="reportCount">0</span> race reports</p>
+                    </div>
+                </div>
             </div>
 
             <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -74,7 +100,29 @@
                     throw new Error(data.error || 'Failed to generate race report');
                 }
                 
-                summary.innerHTML = data.summary;
+                // Update each section
+                document.getElementById('organization').textContent = data.sections.organization;
+                document.getElementById('course').textContent = data.sections.course;
+                document.getElementById('logistics').textContent = data.sections.logistics;
+                document.getElementById('themes').textContent = data.sections.themes;
+                
+                // Update sources
+                const sourcesList = document.getElementById('sources');
+                sourcesList.innerHTML = '';
+                data.sources.forEach(source => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = source.url;
+                    a.target = '_blank';
+                    a.className = 'text-blue-600 hover:text-blue-800';
+                    a.textContent = source.domain;
+                    li.appendChild(a);
+                    sourcesList.appendChild(li);
+                });
+                
+                // Update report count
+                document.getElementById('reportCount').textContent = data.report_count;
+                
                 result.classList.remove('hidden');
             } catch (err) {
                 error.querySelector('span').textContent = err.message;

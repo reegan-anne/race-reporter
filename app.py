@@ -67,23 +67,48 @@ def summarize_race_reports(articles, urls):
 
     response = model.generate_content(prompt)
     summary = response.text
-    summary += f"\n\nThis summary is based on analysis of {len(articles)} race reports."
     
-    # Add URLs as an appendix
-    summary = f"""<div class="race-report">
-{summary}
-</div>
-<div class="sources mt-8 pt-4 border-t border-gray-200">
-<h3 class="text-lg font-semibold mb-2">Sources</h3>
-<ul class="list-disc pl-5">"""
+    # Split the summary into sections
+    sections = {
+        'organization': '',
+        'course': '',
+        'logistics': '',
+        'themes': ''
+    }
     
+    # Simple section detection based on common keywords
+    current_section = None
+    for line in summary.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+            
+        if 'organization' in line.lower() or 'logistics' in line.lower():
+            current_section = 'organization'
+        elif 'course' in line.lower() or 'difficulty' in line.lower():
+            current_section = 'course'
+        elif 'parking' in line.lower() or 'number collection' in line.lower():
+            current_section = 'logistics'
+        elif 'themes' in line.lower() or 'issues' in line.lower():
+            current_section = 'themes'
+            
+        if current_section:
+            sections[current_section] += line + '\n'
+    
+    # Add sources
+    sources = []
     for url in urls:
-        # Extract domain name from URL
         domain = url.split('//')[-1].split('/')[0]
-        summary += f"\n<li><a href='{url}' target='_blank' class='text-blue-600 hover:text-blue-800'>{domain}</a></li>"
+        sources.append({
+            'url': url,
+            'domain': domain
+        })
     
-    summary += "\n</ul>\n</div>"
-    return summary
+    return {
+        'sections': sections,
+        'sources': sources,
+        'report_count': len(articles)
+    }
 
 @app.route('/')
 def home():
@@ -112,9 +137,9 @@ def search():
         return jsonify({'error': 'No relevant race reports found'}), 404
     
     # Generate summary
-    summary = summarize_race_reports(articles, successful_urls)
+    summary_data = summarize_race_reports(articles, successful_urls)
     
-    return jsonify({'summary': summary})
+    return jsonify(summary_data)
 
 if __name__ == '__main__':
     app.run(debug=True) 
